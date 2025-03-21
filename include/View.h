@@ -8,7 +8,7 @@
 namespace Page
 {
 
-#define LYRIC_SHOW_LINES 5
+#define LYRIC_SHOW_LINES 6
 
     typedef enum
     {
@@ -43,18 +43,25 @@ namespace Page
     class View
     {
     private:
-        Operations _opts; // View回调函数集
+        // View回调函数集
+        Operations _opts;
+        // 保存当前播放的音乐列表btn
+        lv_obj_t *_playingMusicBtn = nullptr;
 
     public:
         struct
         {
-            lv_obj_t *cont;
+            // 歌词滚轮
+            lv_obj_t *lyricRoller;
 
+            lv_obj_t *cont;
+            lv_obj_t *name;
             struct
             {
                 lv_obj_t *cont;
                 lv_obj_t *btn;
                 lv_obj_t *slider;
+                lv_obj_t *timeLabel;
             } btnCont;
 
             struct
@@ -76,8 +83,13 @@ namespace Page
         void release(void);
         void appearAnimStart(bool reverse = false);
         void appearAnimClick(bool reverse = false);
-        void addVideoList(const char *name, const void *img_src);
+
+        void addMusicList(const char *name);
         void setPlayProgress(int cur, int total);
+        void loadLyric(const char *lyric);
+        void setLyricId(int id, bool isAnim);
+        const char *getMusicName(int index);
+        void showMusicName(const char *name);
 
     private:
         void AttachEvent(lv_obj_t *obj);
@@ -86,6 +98,7 @@ namespace Page
         void btnContCreate(lv_obj_t *obj);
         void sliderContCreate(lv_obj_t *obj);
         void listContCreate(lv_obj_t *obj);
+        void rollerContCreate(lv_obj_t *obj);
 
         static void onEvent(lv_event_t *event);
         static void buttonEventHandler(lv_event_t *event);

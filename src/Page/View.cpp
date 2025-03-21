@@ -13,6 +13,9 @@ void View::create(Operations &opts)
     // 播放列表画布的创建
     listContCreate(ui.cont);
 
+    // 创建歌词滚筒
+    rollerContCreate(ui.cont);
+
     // 按钮画布的创建
     btnContCreate(ui.cont);
 
@@ -109,9 +112,9 @@ void View::release()
     lv_obj_t *listBtn = nullptr;
     while ((listBtn = lv_obj_get_child(ui.listCont.cont, -1)) != nullptr)
     {
-        char *video_name = (char *)lv_obj_get_user_data(listBtn);
-        if (video_name != nullptr)
-            delete[] video_name;
+        char *music_name = (char *)lv_obj_get_user_data(listBtn);
+        if (music_name != nullptr)
+            delete[] music_name;
 
         lv_obj_del(listBtn);
     }
@@ -147,6 +150,12 @@ void View::contCreate(lv_obj_t *obj)
     lv_obj_set_style_bg_img_opa(cont, LV_OPA_COVER, 0);
     lv_obj_align(cont, LV_ALIGN_CENTER, 0, 0);
     ui.cont = cont;
+
+    lv_obj_t *label = lv_label_create(ui.cont);
+    lv_obj_remove_style_all(label);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
+    lv_label_set_text_fmt(label, "%s", "songName");
+    ui.btnCont.timeLabel = label;
 }
 
 // 按钮画布的创建
@@ -178,6 +187,12 @@ void View::btnContCreate(lv_obj_t *obj)
 
     lv_obj_t *slider = sliderCreate(btnCont, nullptr, 30, -20);
     ui.btnCont.slider = slider;
+
+    lv_obj_t *label = lv_label_create(btnCont);
+    lv_obj_remove_style_all(label);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, -100, 0);
+    lv_label_set_text_fmt(label, "%s", "0:0/0:0");
+    ui.btnCont.timeLabel = label;
 }
 
 void View::sliderContCreate(lv_obj_t *obj)
@@ -200,11 +215,11 @@ void View::listContCreate(lv_obj_t *obj)
 {
     lv_obj_t *listCont = lv_list_create(obj);
     lv_obj_remove_style_all(listCont);
-    lv_obj_set_size(listCont, lv_pct(80), lv_pct(50));
+    lv_obj_set_size(listCont, lv_pct(45), lv_pct(50));
     // lv_obj_clear_flag(listCont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(listCont, LV_OPA_60, 0);
     lv_obj_set_style_bg_color(listCont, lv_color_hex(0x6a8d6d), 0);
-    lv_obj_align(listCont, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(listCont, LV_ALIGN_LEFT_MID, 20, 0);
     lv_obj_set_style_radius(listCont, 16, LV_PART_MAIN);
     lv_obj_set_style_pad_row(listCont, 20, LV_PART_MAIN);
 
@@ -214,6 +229,107 @@ void View::listContCreate(lv_obj_t *obj)
     lv_obj_set_scroll_snap_y(listCont, LV_SCROLL_SNAP_CENTER);
 
     ui.listCont.cont = listCont;
+}
+
+void View::rollerContCreate(lv_obj_t *obj)
+{
+    // 创建歌词滚筒
+    lv_obj_t *roller = lv_roller_create(obj);
+    lv_obj_set_size(roller, lv_pct(45), 300);
+    lv_obj_align(roller, LV_ALIGN_RIGHT_MID, -20, 0);                          // 设置对齐
+    lv_obj_clear_flag(roller, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE); // 不可滚动不可点击
+    lv_obj_set_style_bg_color(roller, lv_color_hex(0x6a8d6d), 0);
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                    // 背景透明
+    lv_obj_set_style_border_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                // 边框透明
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项背景透明
+    // lv_obj_set_style_text_font(roller, font28.font, LV_STATE_DEFAULT);                    // 非选中项字体
+    // lv_obj_set_style_text_font(roller, font34.font, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项字体
+    lv_obj_set_style_text_color(roller, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(roller, lv_color_hex(0xe9de9e), LV_PART_SELECTED | LV_STATE_DEFAULT); // 字体颜色
+    lv_roller_set_options(roller, "begin~", LV_ROLLER_MODE_NORMAL);
+    lv_roller_set_visible_row_count(roller, LYRIC_SHOW_LINES); // 可见行数6行
+
+    ui.lyricRoller = roller;
+}
+
+/**
+ * @brief 添加一个音乐到列表
+ * @param name 音乐文件名称
+ */
+void View::addMusicList(const char *name)
+{
+    // 添加一个按钮到list
+    lv_obj_t *obj = listCreate(name, nullptr);
+
+    if (_playingMusicBtn == nullptr)
+    {
+        // 保存地一首歌
+        _playingMusicBtn = obj;
+    }
+
+    int len = strlen(name) + 1;
+    char *musicName = new char[len];
+    strcpy(musicName, name);
+
+    lv_obj_set_user_data(obj, musicName);
+
+    lv_obj_add_event_cb(obj, listBtnEventHandler, LV_EVENT_SHORT_CLICKED, this);
+}
+
+/**
+ * @brief 加载歌词到UI
+ * @param lyric 使用\n隔开的所有歌词
+ */
+void View::loadLyric(const char *lyric)
+{
+    // if (lyric != nullptr)
+    //     lv_roller_set_options(ui.lyricRoller, lyric, LV_ROLLER_MODE_NORMAL);
+    // else
+    //     lv_roller_set_options(ui.lyricRoller, "did not find lyric", LV_ROLLER_MODE_NORMAL);
+}
+
+/**
+ * @brief 设置当前歌词
+ * @param id 歌词id
+ */
+void View::setLyricId(int id, bool isAnim)
+{
+    if (id < 0)
+        return;
+
+    lv_anim_enable_t anim = id && isAnim ? LV_ANIM_ON : LV_ANIM_OFF;
+    // lv_roller_set_selected(ui.lyricRoller, id, anim);
+}
+
+/**
+ * @brief 根据索引获取对应的音乐文件名
+ * @param index 索引
+ */
+const char *View::getMusicName(int index)
+{
+    const char *name = nullptr;
+
+    lv_obj_t *btn = lv_obj_get_child(ui.listCont.cont, index);
+    if (btn != nullptr)
+    {
+        _playingMusicBtn = btn;
+        name = (const char *)lv_obj_get_user_data(btn);
+    }
+
+    return name;
+}
+
+/**
+ *@brief 在底部显示音乐名称
+ *@param name 音乐名
+ */
+void View::showMusicName(const char *name)
+{
+    if (name != nullptr)
+    {
+        // lv_label_set_text_fmt(ui.name, "%s", "hello world");
+        printf("name:%s\n", name);
+    }
 }
 
 lv_obj_t *View::sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs, int32_t min, int32_t max, int32_t val)
@@ -341,30 +457,15 @@ lv_obj_t *View::roundRectCreate(lv_obj_t *par, lv_coord_t x_ofs, lv_coord_t y_of
 }
 
 /**
- * @brief 添加一个视频到列表
- * @param name 视频文件名称
- * @param img_src 视频文件封面
- */
-void View::addVideoList(const char *name, const void *img_src)
-{
-    lv_obj_t *obj = listCreate(name, img_src);
-
-    int len = strlen(name) + 1;
-    char *video_name = new char[len];
-    strcpy(video_name, name);
-
-    lv_obj_set_user_data(obj, video_name);
-
-    printf("[View] videoName:%s\n", video_name);
-
-    lv_obj_add_event_cb(obj, listBtnEventHandler, LV_EVENT_SHORT_CLICKED, this);
-}
-
-/**
  * @brief 设置视频播放进度显示
  */
 void View::setPlayProgress(int cur, int total)
 {
+    lv_slider_set_range(ui.btnCont.slider, 0, total);
+    if (!lv_obj_has_state(ui.btnCont.slider, LV_STATE_PRESSED)) // 未按下时设置
+        lv_slider_set_value(ui.btnCont.slider, cur, LV_ANIM_OFF);
+
+    lv_label_set_text_fmt(ui.btnCont.timeLabel, "%d:%d/%d:%d", cur / 60, cur % 60, total / 60, total % 60);
 }
 
 void View::buttonEventHandler(lv_event_t *event)
@@ -374,15 +475,6 @@ void View::buttonEventHandler(lv_event_t *event)
 
     lv_event_code_t code = lv_event_get_code(event);
     lv_obj_t *obj = lv_event_get_current_target(event);
-
-    /* Transparent background style */
-    static lv_style_t style_scr_act;
-    if (style_scr_act.prop_cnt == 0)
-    {
-        lv_style_init(&style_scr_act);
-        lv_style_set_bg_opa(&style_scr_act, LV_OPA_COVER);
-        lv_obj_add_style(lv_scr_act(), &style_scr_act, 0);
-    }
 
     if (code == LV_EVENT_SHORT_CLICKED)
     {
@@ -405,6 +497,8 @@ void View::sliderEventHandler(lv_event_t *event)
     if (code == LV_EVENT_RELEASED)
     {
         int cur = lv_slider_get_value(obj);
+        if (instance->_opts.setCurCb != nullptr)
+            instance->_opts.setCurCb(cur);
     }
 }
 
@@ -415,21 +509,19 @@ void View::listBtnEventHandler(lv_event_t *event)
 
     lv_event_code_t code = lv_event_get_code(event);
     lv_obj_t *obj = lv_event_get_current_target(event);
-    const char *videoName = (const char *)lv_obj_get_user_data(obj);
+    const char *musicName = (const char *)lv_obj_get_user_data(obj);
 
-    printf("[View] Cb videoName:%s\n", videoName);
-
-    /* Transparent background style */
-    static lv_style_t style_scr_act;
-    if (style_scr_act.prop_cnt == 0)
-    {
-        lv_style_init(&style_scr_act);
-        lv_style_set_bg_opa(&style_scr_act, LV_OPA_COVER);
-        lv_obj_add_style(lv_scr_act(), &style_scr_act, 0);
-    }
+    printf("[View] Cb musicName:%s\n", musicName);
 
     if (code == LV_EVENT_SHORT_CLICKED)
     {
+        instance->_playingMusicBtn = obj;
+        int index = lv_obj_get_index(obj);
+
+        if (instance->_opts.playCb != nullptr)
+            instance->_opts.playCb(musicName, index);
+
+        lv_obj_set_style_bg_img_src(instance->ui.btnCont.btn, LV_SYMBOL_PAUSE, 0);
     }
 }
 

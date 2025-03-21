@@ -1,12 +1,9 @@
 #include "Model.h"
 
-#define MUSIC_DIR "/mnt/UDISK/musics/"
+#define MUSIC_DIR "/mnt/UDISK/"
 #define LYRIC_DIR "/mnt/UDISK/musics/lyric/"
 
 using namespace Page;
-
-/* 支持的视频文件格式 */
-static const char *fileType[] = {".avi", ".mkv", ".flv", ".ts", ".mp4", ".webm", "asf", "mpg", ".mpeg", ".mov", ".vob", ".3gp", ".wmv", ".pmp"};
 
 /**
  * @brief Model构造函数
@@ -66,6 +63,10 @@ void Model::onTimerUpdate(lv_timer_t *timer)
  */
 void Model::update(void)
 {
+    if (_musicObj != nullptr)
+    {
+        _view.setPlayProgress(_musicObj->getCurTime(), _musicObj->getTotalTime());
+    }
 }
 
 /**
@@ -76,6 +77,10 @@ void Model::update(void)
 void *Model::threadProcHandler(void *arg)
 {
     Model *model = static_cast<Model *>(arg); // 将arg转换为Model指针
+
+    int tick = 0;
+
+    model->_musicNum = model->searchMusic(MUSIC_DIR);
 
     while (!model->_threadExitFlag)
     {
@@ -128,7 +133,7 @@ int Model::searchMusic(string path)
             legalMusic = false;
 
             pthread_mutex_lock(_mutex);
-            // _view->addMusicList(ent->d_name);
+            _view.addMusicList(ent->d_name);
             pthread_mutex_unlock(_mutex);
 
             count++;
@@ -162,9 +167,9 @@ void Model::changeMusic(void)
         break;
     }
 
-    // const char *name = _view->getMusicName(_musicIndex); // 根据索引获取音乐文件名
+    const char *name = _view.getMusicName(_musicIndex); // 根据索引获取音乐文件名
 
-    // this->play(name, _musicIndex); // 播放
+    play(name, _musicIndex); // 播放音乐
 }
 
 /**
@@ -208,42 +213,42 @@ void Model::play(const char *name, int index)
         return;
     }
 
-    _musicIndex = index; // 保存播放索引
-    // _view->showMusicName(name); // 设置音乐名显示
+    // _musicIndex = index;       // 保存播放索引
+    _view.showMusicName(name); // 设置音乐名显示
 
     std::string filePath = MUSIC_DIR + std::string(name);
     if (_musicObj != nullptr)
         delete _musicObj; // 删除先前的播放
     _musicObj = nullptr;
 
-    if (_musicLyric != nullptr)
-        lyric_free(_musicLyric); // 删除先前的歌词
-    _musicLyric = nullptr;
+    // if (_musicLyric != nullptr)
+    //     lyric_free(_musicLyric); // 删除先前的歌词
+    // _musicLyric = nullptr;
 
     _musicObj = new MusicObj(filePath);
     _musicObj->play();
 
-    _musicLyricSentences = 0;
-    filePath = LYRIC_DIR + std::string(name);
-    size_t pos = filePath.find('.');
-    if (pos != string::npos)
-    {
-        filePath.erase(pos);
-        filePath += ".lrc";
-        _musicLyric = lyric_load_from_file(filePath.c_str());
-        if (_musicLyric != nullptr)
-        {
-            _musicLyricSentences = lyric_get_sentence_cnt(_musicLyric);
-            const char *lyric_n = lyric_get_all(_musicLyric, '\n');
-            // _view->loadLyric(lyric_n);   // 装载歌词到UI
-            if (lyric_n != nullptr) // UI内部拷贝，此处可以释放
-                free((void *)lyric_n);
-        }
-        else
-        {
-            // _view->loadLyric(nullptr); // 指示找不到歌词
-        }
-    }
+    // _musicLyricSentences = 0;
+    // filePath = LYRIC_DIR + std::string(name);
+    // size_t pos = filePath.find('.');
+    // if (pos != string::npos)
+    // {
+    //     filePath.erase(pos);
+    //     filePath += ".lrc";
+    //     _musicLyric = lyric_load_from_file(filePath.c_str());
+    //     if (_musicLyric != nullptr)
+    //     {
+    //         _musicLyricSentences = lyric_get_sentence_cnt(_musicLyric);
+    //         const char *lyric_n = lyric_get_all(_musicLyric, '\n');
+    //         _view.loadLyric(lyric_n); // 装载歌词到UI
+    //         if (lyric_n != nullptr)   // UI内部拷贝，此处可以释放
+    //             free((void *)lyric_n);
+    //     }
+    //     else
+    //     {
+    //         _view.loadLyric(nullptr); // 指示找不到歌词
+    //     }
+    // }
 }
 
 /**
