@@ -24,9 +24,6 @@ int main(int argc, char *argv[])
     // Init HAL
     HAL::Init();
 
-    snd_pcm_init();
-    snd_mixer_init();
-
     // model初始化
     model = new Page::Model(exitCallback, lv_mutex);
 
@@ -42,6 +39,8 @@ int main(int argc, char *argv[])
     {
         // ...
     }
+
+    delete musicObj;
 
     return 0;
 }

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
-#include <string> 
+#include <string>
 
 #include "../libs/lvgl/lvgl.h"
 #include "../libs/lv_drivers/display/sunxifb.h"

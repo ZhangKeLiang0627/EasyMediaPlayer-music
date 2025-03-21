@@ -1,4 +1,5 @@
 #include "hal.h"
+#include "sound.h"
 
 /* File system funtion */
 static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode);
@@ -83,6 +84,10 @@ void HAL::Init(void)
 
     // 注册退出回调函数
     install_signal_handler();
+
+    // sound Init
+    snd_pcm_init();
+    snd_mixer_init();
 }
 
 /**

@@ -16,14 +16,11 @@ void View::create(Operations &opts)
     // 按钮画布的创建
     btnContCreate(ui.cont);
 
-    // 进度条画布的创建
-    sliderContCreate(ui.cont);
-
     // 为当前屏幕添加事件回调函数
     AttachEvent(lv_scr_act());
 
     // 为进度条添加事件回调函数
-    lv_obj_add_event_cb(ui.sliderCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
+    lv_obj_add_event_cb(ui.btnCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
 
     // 动画的创建
     ui.anim_timeline = lv_anim_timeline_create();
@@ -157,7 +154,7 @@ void View::btnContCreate(lv_obj_t *obj)
 {
     lv_obj_t *btnCont = lv_obj_create(obj);
     lv_obj_remove_style_all(btnCont);
-    lv_obj_set_size(btnCont, lv_pct(70), LV_VER_RES / 4);
+    lv_obj_set_size(btnCont, lv_pct(90), LV_VER_RES / 4);
     lv_obj_clear_flag(btnCont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(btnCont, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(btnCont, lv_color_hex(0x6a8d6d), 0);
@@ -165,19 +162,22 @@ void View::btnContCreate(lv_obj_t *obj)
     lv_obj_set_style_radius(btnCont, 16, LV_PART_MAIN);
     ui.btnCont.cont = btnCont;
 
-    lv_obj_t *btn = btnCreate(btnCont, LV_SYMBOL_PLAY, -20);
+    lv_obj_t *btn = btnCreate(btnCont, LV_SYMBOL_PLAY, 10, -20);
     lv_obj_add_event_cb(btn, buttonEventHandler, LV_EVENT_ALL, this);
     ui.btnCont.btn = btn;
 
     /* Render octagon explode */
-    lv_obj_t *roundRect_1 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_2 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_3 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_4 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_5 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_6 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_7 = roundRectCreate(btnCont, 0, -20);
-    lv_obj_t *roundRect_8 = roundRectCreate(btnCont, 0, -20);
+    lv_obj_t *roundRect_1 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_2 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_3 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_4 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_5 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_6 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_7 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_8 = roundRectCreate(btnCont, 30, -20);
+
+    lv_obj_t *slider = sliderCreate(btnCont, nullptr, 30, -20);
+    ui.btnCont.slider = slider;
 }
 
 void View::sliderContCreate(lv_obj_t *obj)
@@ -224,11 +224,11 @@ lv_obj_t *View::sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_of
     lv_slider_set_range(obj, min, max);
     lv_slider_set_value(obj, val, LV_ANIM_OFF);
 
-    lv_obj_set_size(obj, lv_pct(85), lv_pct(20));
+    lv_obj_set_size(obj, lv_pct(78), lv_pct(20));
 
-    lv_obj_set_style_border_width(obj, 4, LV_PART_KNOB);
+    lv_obj_set_style_border_width(obj, 3, LV_PART_KNOB);
     lv_obj_set_style_border_color(obj, lv_color_hex(0xbbbbbb), LV_PART_KNOB);
-    lv_obj_set_style_pad_all(obj, 6, LV_PART_KNOB);
+    lv_obj_set_style_pad_all(obj, 1, LV_PART_KNOB);
     lv_obj_set_style_radius(obj, 10, LV_PART_KNOB);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(obj, LV_OPA_60, LV_PART_KNOB | LV_STATE_PRESSED);
@@ -256,19 +256,19 @@ lv_obj_t *View::sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_of
     return obj;
 }
 
-lv_obj_t *View::btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t y_ofs)
+lv_obj_t *View::btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs)
 {
     lv_obj_t *obj = lv_obj_create(par);
     lv_obj_remove_style_all(obj);
-    lv_obj_set_size(obj, 180, 50);
+    lv_obj_set_size(obj, 50, 50);
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_align(obj, LV_ALIGN_CENTER, 0, y_ofs);
+    lv_obj_align(obj, LV_ALIGN_LEFT_MID, x_ofs, y_ofs);
     lv_obj_set_style_bg_img_src(obj, img_src, 0);
 
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-    lv_obj_set_style_width(obj, 75, LV_STATE_PRESSED);                         // 设置button按下时的宽
-    lv_obj_set_style_height(obj, 25, LV_STATE_PRESSED);                        // 设置button按下时的长
+    lv_obj_set_style_width(obj, 30, LV_STATE_PRESSED);                         // 设置button按下时的宽
+    lv_obj_set_style_height(obj, 30, LV_STATE_PRESSED);                        // 设置button按下时的长
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x356b8c), 0);                 // 设置按钮默认的颜色
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x242947), LV_STATE_PRESSED);  // 设置按钮在被按下时的颜色
     lv_obj_set_style_bg_color(obj, lv_color_hex(0xf2daaa), LV_STATE_FOCUSED);  // 设置按钮在被聚焦时的颜色
@@ -335,7 +335,7 @@ lv_obj_t *View::roundRectCreate(lv_obj_t *par, lv_coord_t x_ofs, lv_coord_t y_of
 
     lv_obj_set_style_bg_color(roundRect, lv_color_hex(0x88d35e), 0);
     lv_obj_set_style_bg_opa(roundRect, LV_OPA_TRANSP, 0);
-    lv_obj_align(roundRect, LV_ALIGN_CENTER, x_ofs, y_ofs);
+    lv_obj_align(roundRect, LV_ALIGN_LEFT_MID, x_ofs, y_ofs);
 
     return roundRect;
 }

@@ -7,11 +7,37 @@
 
 namespace Page
 {
+
+#define LYRIC_SHOW_LINES 5
+
+    typedef enum
+    {
+        PlayMode_ListLoop = 0, // 列表循环
+        PlayMode_SingleLoop,   // 单曲循环
+        PlayMode_Random,       // 随机播放
+    } PlayMode;
+
     using ExitCb = std::function<void(void)>;
+    using GetStateCb = std::function<int(void)>;
+    using PauseCb = std::function<void(void)>;
+    using PlayCb = std::function<void(const char *, int)>;
+    using SetCurCb = std::function<void(int)>;
+    using GetVolumeCb = std::function<void(int *, int *)>;
+    using SetVolumeCb = std::function<void(int)>;
+    using GetModeCb = std::function<PlayMode(void)>;
+    using SetModeCb = std::function<void(PlayMode)>;
 
     struct Operations
     {
         ExitCb exitCb;
+        GetStateCb getStateCb;   // 获取当前音乐状态回调函数
+        PauseCb pauseCb;         // 当前音乐暂停回调函数
+        PlayCb playCb;           // 音乐播放回调函数
+        SetCurCb setCurCb;       // 音乐设置进度回调函数
+        GetVolumeCb getVolumeCb; // 获取音乐音量回调函数
+        SetVolumeCb setVolumeCb; // 设置音乐音量回调函数
+        GetModeCb getModeCb;     // 获取当前播放模式回调函数
+        SetModeCb setModeCb;     // 获取当前播放模式回调函数
     };
 
     class View
@@ -28,6 +54,7 @@ namespace Page
             {
                 lv_obj_t *cont;
                 lv_obj_t *btn;
+                lv_obj_t *slider;
             } btnCont;
 
             struct
@@ -66,7 +93,7 @@ namespace Page
         static void sliderEventHandler(lv_event_t *event);
 
         lv_obj_t *roundRectCreate(lv_obj_t *par, lv_coord_t x_ofs, lv_coord_t y_ofs);
-        lv_obj_t *btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t y_ofs);
+        lv_obj_t *btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs);
         lv_obj_t *sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs = 0, lv_coord_t y_ofs = 0, int32_t min = 0, int32_t max = 255, int32_t val = 0);
         lv_obj_t *listCreate(const char *name, const void *img_src);
     };
