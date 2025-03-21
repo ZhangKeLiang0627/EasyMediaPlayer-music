@@ -1,7 +1,7 @@
 #include "Model.h"
 
 #define MUSIC_DIR "/mnt/UDISK/"
-#define LYRIC_DIR "/mnt/UDISK/musics/lyric/"
+#define LYRIC_DIR "/mnt/UDISK/"
 
 using namespace Page;
 
@@ -84,7 +84,15 @@ void *Model::threadProcHandler(void *arg)
 
     while (!model->_threadExitFlag)
     {
+        if (model->_musicLyric != nullptr)
+        {
+            if (model->_musicObj != nullptr)
+            {
+                int id = lyric_getid_by_time(model->_musicLyric, model->_musicObj->getCurTime() * 1000);
 
+                model->_view.setLyricId(id, true);
+            }
+        }
         usleep(50000);
     }
 }
@@ -213,7 +221,7 @@ void Model::play(const char *name, int index)
         return;
     }
 
-    // _musicIndex = index;       // 保存播放索引
+    _musicIndex = index;       // 保存播放索引
     _view.showMusicName(name); // 设置音乐名显示
 
     std::string filePath = MUSIC_DIR + std::string(name);
@@ -221,34 +229,34 @@ void Model::play(const char *name, int index)
         delete _musicObj; // 删除先前的播放
     _musicObj = nullptr;
 
-    // if (_musicLyric != nullptr)
-    //     lyric_free(_musicLyric); // 删除先前的歌词
-    // _musicLyric = nullptr;
+    if (_musicLyric != nullptr)
+        lyric_free(_musicLyric); // 删除先前的歌词
+    _musicLyric = nullptr;
 
     _musicObj = new MusicObj(filePath);
     _musicObj->play();
 
-    // _musicLyricSentences = 0;
-    // filePath = LYRIC_DIR + std::string(name);
-    // size_t pos = filePath.find('.');
-    // if (pos != string::npos)
-    // {
-    //     filePath.erase(pos);
-    //     filePath += ".lrc";
-    //     _musicLyric = lyric_load_from_file(filePath.c_str());
-    //     if (_musicLyric != nullptr)
-    //     {
-    //         _musicLyricSentences = lyric_get_sentence_cnt(_musicLyric);
-    //         const char *lyric_n = lyric_get_all(_musicLyric, '\n');
-    //         _view.loadLyric(lyric_n); // 装载歌词到UI
-    //         if (lyric_n != nullptr)   // UI内部拷贝，此处可以释放
-    //             free((void *)lyric_n);
-    //     }
-    //     else
-    //     {
-    //         _view.loadLyric(nullptr); // 指示找不到歌词
-    //     }
-    // }
+    _musicLyricSentences = 0;
+    filePath = LYRIC_DIR + std::string(name);
+    size_t pos = filePath.find('.');
+    if (pos != string::npos)
+    {
+        filePath.erase(pos);
+        filePath += ".lrc";
+        _musicLyric = lyric_load_from_file(filePath.c_str());
+        if (_musicLyric != nullptr)
+        {
+            _musicLyricSentences = lyric_get_sentence_cnt(_musicLyric);
+            const char *lyric_n = lyric_get_all(_musicLyric, '\n');
+            _view.loadLyric(lyric_n); // 装载歌词到UI
+            if (lyric_n != nullptr)   // UI内部拷贝，此处可以释放
+                free((void *)lyric_n);
+        }
+        else
+        {
+            _view.loadLyric(nullptr); // 指示找不到歌词
+        }
+    }
 }
 
 /**

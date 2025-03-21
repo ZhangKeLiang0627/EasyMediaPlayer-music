@@ -7,6 +7,13 @@ void View::create(Operations &opts)
     // 获取View回调函数集
     _opts = opts;
 
+    // 初始化字体
+    _font.name = "/mnt/UDISK/SmileySans.ttf";
+    _font.weight = 16;
+    _font.style = FT_FONT_STYLE_NORMAL;
+    _font.mem = nullptr;
+    lv_ft_font_init(&_font);
+
     // 总画布的创建
     contCreate(lv_scr_act());
 
@@ -235,19 +242,19 @@ void View::rollerContCreate(lv_obj_t *obj)
 {
     // 创建歌词滚筒
     lv_obj_t *roller = lv_roller_create(obj);
-    lv_obj_set_size(roller, lv_pct(45), 300);
+    lv_obj_set_size(roller, lv_pct(45), lv_pct(50));
     lv_obj_align(roller, LV_ALIGN_RIGHT_MID, -20, 0);                          // 设置对齐
     lv_obj_clear_flag(roller, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE); // 不可滚动不可点击
     lv_obj_set_style_bg_color(roller, lv_color_hex(0x6a8d6d), 0);
-    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                    // 背景透明
-    lv_obj_set_style_border_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                // 边框透明
-    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项背景透明
-    // lv_obj_set_style_text_font(roller, font28.font, LV_STATE_DEFAULT);                    // 非选中项字体
-    // lv_obj_set_style_text_font(roller, font34.font, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项字体
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                        // 背景透明
+    lv_obj_set_style_border_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                    // 边框透明
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_PART_SELECTED | LV_STATE_DEFAULT);     // 选中项背景透明
+    lv_obj_set_style_text_font(roller, _font.font, LV_STATE_DEFAULT);                    // 非选中项字体
+    lv_obj_set_style_text_font(roller, _font.font, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项字体
     lv_obj_set_style_text_color(roller, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(roller, lv_color_hex(0xe9de9e), LV_PART_SELECTED | LV_STATE_DEFAULT); // 字体颜色
     lv_roller_set_options(roller, "begin~", LV_ROLLER_MODE_NORMAL);
-    lv_roller_set_visible_row_count(roller, LYRIC_SHOW_LINES); // 可见行数6行
+    // lv_roller_set_visible_row_count(roller, LYRIC_SHOW_LINES); // 可见行数6行
 
     ui.lyricRoller = roller;
 }
@@ -282,10 +289,10 @@ void View::addMusicList(const char *name)
  */
 void View::loadLyric(const char *lyric)
 {
-    // if (lyric != nullptr)
-    //     lv_roller_set_options(ui.lyricRoller, lyric, LV_ROLLER_MODE_NORMAL);
-    // else
-    //     lv_roller_set_options(ui.lyricRoller, "did not find lyric", LV_ROLLER_MODE_NORMAL);
+    if (lyric != nullptr)
+        lv_roller_set_options(ui.lyricRoller, lyric, LV_ROLLER_MODE_NORMAL);
+    else
+        lv_roller_set_options(ui.lyricRoller, "did not find lyric", LV_ROLLER_MODE_NORMAL);
 }
 
 /**
@@ -298,7 +305,7 @@ void View::setLyricId(int id, bool isAnim)
         return;
 
     lv_anim_enable_t anim = id && isAnim ? LV_ANIM_ON : LV_ANIM_OFF;
-    // lv_roller_set_selected(ui.lyricRoller, id, anim);
+    lv_roller_set_selected(ui.lyricRoller, id, anim);
 }
 
 /**

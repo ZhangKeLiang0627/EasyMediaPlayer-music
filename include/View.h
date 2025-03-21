@@ -47,6 +47,7 @@ namespace Page
         Operations _opts;
         // 保存当前播放的音乐列表btn
         lv_obj_t *_playingMusicBtn = nullptr;
+        lv_ft_info_t _font;
 
     public:
         struct
