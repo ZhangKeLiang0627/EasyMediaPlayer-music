@@ -162,7 +162,7 @@ void View::contCreate(lv_obj_t *obj)
     lv_obj_remove_style_all(label);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
     lv_label_set_text_fmt(label, "%s", "songName");
-    ui.btnCont.timeLabel = label;
+    ui.name = label;
 }
 
 // 按钮画布的创建
@@ -334,8 +334,8 @@ void View::showMusicName(const char *name)
 {
     if (name != nullptr)
     {
-        // lv_label_set_text_fmt(ui.name, "%s", "hello world");
-        printf("name:%s\n", name);
+        lv_label_set_text(ui.name, name);
+        printf("songName:%s\n", name);
     }
 }
 
