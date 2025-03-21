@@ -24,3 +24,19 @@ CXX = /home/hugokkl/tina-sdk/prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/too
 ## 运行
 
 可执行文件为：`eMP_music`
+
+## lrc文件格式
+
+注意：一定要加`.10`，否则roller会有bug！
+
+```lrc
+[00:00.10] 歌词歌词歌词...
+[00:01.10] 歌词歌词歌词...
+[00:02.10] 歌词歌词歌词...
+[00:05.10] 歌词歌词歌词...
+[00:06.10] 歌词歌词歌词...
+
+...
+
+```
+
