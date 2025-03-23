@@ -84,6 +84,8 @@ void *Model::threadProcHandler(void *arg)
 
     while (!model->_threadExitFlag)
     {
+        pthread_mutex_lock(model->_mutex);
+
         if (model->_musicLyric != nullptr)
         {
             if (model->_musicObj != nullptr)
@@ -93,6 +95,15 @@ void *Model::threadProcHandler(void *arg)
                 model->_view.setLyricId(id, true);
             }
         }
+
+        // 播放完后继续播放下一首歌
+        if (model->_musicObj != nullptr && model->_musicObj->isOver() == true)
+        {
+            model->changeMusic();
+        }
+
+        pthread_mutex_unlock(model->_mutex);
+
         usleep(50000);
     }
 }

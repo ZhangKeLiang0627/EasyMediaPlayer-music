@@ -43,9 +43,10 @@ namespace Page
     class View
     {
     private:
-        Operations _opts;                     // View回调函数集
-        lv_obj_t *_playingMusicBtn = nullptr; // 保存当前播放的音乐列表btn
-        bool _isPlaying = false;              // 是否音乐播放标志位
+        Operations _opts;                         // View回调函数集
+        lv_obj_t *_playingMusicBtn = nullptr;     // 保存当前播放的音乐列表btn
+        bool _isPlaying = false;                  // 是否音乐播放标志位
+        PlayMode _playMode = PlayMode_ListLoop;   // 列表播放模式
 
     public:
         struct

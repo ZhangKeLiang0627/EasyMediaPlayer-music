@@ -32,6 +32,9 @@ void View::create(Operations &opts)
     AttachEvent(lv_scr_act());
     // 为播放/暂停键添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.btn, buttonEventHandler, LV_EVENT_ALL, this);
+    lv_obj_add_event_cb(ui.funcCont.prevBtn, buttonEventHandler, LV_EVENT_ALL, this);
+    lv_obj_add_event_cb(ui.funcCont.nextBtn, buttonEventHandler, LV_EVENT_ALL, this);
+    lv_obj_add_event_cb(ui.funcCont.funcBtn, buttonEventHandler, LV_EVENT_ALL, this);
     // 为进度条添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
     // 为进度条添加事件回调函数
@@ -222,20 +225,20 @@ void View::btnContCreate(lv_obj_t *obj)
     lv_obj_set_style_radius(btnCont, 16, LV_PART_MAIN);
     ui.btnCont.cont = btnCont;
 
-    lv_obj_t *btn = btnCreate(btnCont, LV_SYMBOL_PLAY, 10, -20);
+    lv_obj_t *btn = btnCreate(btnCont, LV_SYMBOL_PLAY, 10, -25);
     ui.btnCont.btn = btn;
 
     /* Render octagon explode */
-    lv_obj_t *roundRect_1 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_2 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_3 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_4 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_5 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_6 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_7 = roundRectCreate(btnCont, 30, -20);
-    lv_obj_t *roundRect_8 = roundRectCreate(btnCont, 30, -20);
+    lv_obj_t *roundRect_1 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_2 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_3 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_4 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_5 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_6 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_7 = roundRectCreate(btnCont, 30, -25);
+    lv_obj_t *roundRect_8 = roundRectCreate(btnCont, 30, -25);
 
-    lv_obj_t *slider = sliderCreate(btnCont, nullptr, 30, -20);
+    lv_obj_t *slider = sliderCreate(btnCont, nullptr, 30, -15);
     ui.btnCont.slider = slider;
 
     lv_obj_t *label = lv_label_create(btnCont);
@@ -573,29 +576,105 @@ void View::buttonEventHandler(lv_event_t *event)
 
     if (code == LV_EVENT_SHORT_CLICKED)
     {
-        instance->appearAnimClick();
-
-        if (instance->_isPlaying == true)
+        if (obj == instance->ui.btnCont.btn)
         {
-            if (instance->_opts.pauseCb != nullptr)
+            instance->appearAnimClick();
+
+            if (instance->_isPlaying == true)
             {
-                instance->_isPlaying = false;
-                instance->_opts.pauseCb();
-                lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PLAY, 0);
-                printf("[View] pause!\n");
+                if (instance->_opts.pauseCb != nullptr)
+                {
+                    instance->_isPlaying = false;
+                    instance->_opts.pauseCb();
+                    lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PLAY, 0);
+                    printf("[View] pause!\n");
+                }
+            }
+            else
+            {
+                if (instance->_opts.playCb != nullptr)
+                {
+
+                    int index = lv_obj_get_index(instance->_playingMusicBtn);
+
+                    instance->_isPlaying = true;
+                    instance->_opts.playCb(nullptr, index);
+                    lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PAUSE, 0);
+                    printf("[View] play!\n");
+                }
             }
         }
-        else
+
+        if (obj == instance->ui.funcCont.prevBtn)
         {
-            if (instance->_opts.playCb != nullptr)
+            int index = lv_obj_get_index(instance->_playingMusicBtn); // 获取当前musicBtn索引
+            int total = lv_obj_get_child_cnt(instance->ui.listCont.cont) - 1;
+            index = index < total ? index - 1 : total - 1; // 设置上一个btn索引
+
+            lv_obj_t *nextBtn = lv_obj_get_child(instance->ui.listCont.cont, index); // 获取上一个musicListBtn
+            if (nextBtn != nullptr)
             {
-
-                int index = lv_obj_get_index(instance->_playingMusicBtn);
-
                 instance->_isPlaying = true;
-                instance->_opts.playCb(nullptr, index);
-                lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PAUSE, 0);
-                printf("[View] play!\n");
+
+                instance->_playingMusicBtn = nextBtn;
+                const char *musicName = (const char *)lv_obj_get_user_data(nextBtn);
+                if (instance->_opts.playCb != nullptr && musicName != nullptr)
+                    instance->_opts.playCb(musicName, index);
+
+                lv_obj_set_style_bg_img_src(instance->ui.btnCont.btn, LV_SYMBOL_PAUSE, 0);
+                printf("[View] prev!\n");
+            }
+        }
+        else if (obj == instance->ui.funcCont.nextBtn)
+        {
+            int index = lv_obj_get_index(instance->_playingMusicBtn); // 获取当前musicBtn索引
+            int total = lv_obj_get_child_cnt(instance->ui.listCont.cont) - 1;
+            index = index < total ? index + 1 : 0; // 设置下一个btn索引
+
+            lv_obj_t *nextBtn = lv_obj_get_child(instance->ui.listCont.cont, index); // 获取下一个musicListBtn
+            if (nextBtn != nullptr)
+            {
+                instance->_isPlaying = true;
+
+                instance->_playingMusicBtn = nextBtn;
+                const char *musicName = (const char *)lv_obj_get_user_data(nextBtn);
+                if (instance->_opts.playCb != nullptr && musicName != nullptr)
+                    instance->_opts.playCb(musicName, index);
+
+                lv_obj_set_style_bg_img_src(instance->ui.btnCont.btn, LV_SYMBOL_PAUSE, 0);
+                printf("[View] next!\n");
+            }
+        }
+        else if (obj == instance->ui.funcCont.funcBtn)
+        {
+            if (instance->_playMode != PlayMode_Random)
+                instance->_playMode = (PlayMode)(instance->_playMode + (PlayMode)1);
+            else
+                instance->_playMode = PlayMode_ListLoop;
+
+            if (instance->_opts.setModeCb != nullptr)
+            {
+                instance->_opts.setModeCb(instance->_playMode);
+
+                switch (instance->_playMode)
+                {
+                case PlayMode_ListLoop:
+                    lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_LOOP, 0);
+
+                    break;
+                case PlayMode_SingleLoop:
+                    lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_LIST, 0);
+
+                    break;
+                case PlayMode_Random:
+                    lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_SHUFFLE, 0);
+
+                    break;
+                default:
+                    break;
+                }
+
+                printf("[View] setMode!\n");
             }
         }
     }
