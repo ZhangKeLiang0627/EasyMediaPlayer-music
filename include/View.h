@@ -45,7 +45,6 @@ namespace Page
     private:
         Operations _opts;                     // View回调函数集
         lv_obj_t *_playingMusicBtn = nullptr; // 保存当前播放的音乐列表btn
-        lv_ft_info_t _font;                   // 自定义字体
         bool _isPlaying = false;              // 是否音乐播放标志位
 
     public:
@@ -55,6 +54,11 @@ namespace Page
 
             lv_obj_t *cont;
             lv_obj_t *name;
+            struct
+            {
+                lv_ft_info_t font16; // 自定义字体
+                lv_ft_info_t font20; // 自定义字体
+            } fontCont;
             struct
             {
                 lv_obj_t *cont;
@@ -76,12 +80,14 @@ namespace Page
 
             lv_anim_timeline_t *anim_timeline;
             lv_anim_timeline_t *anim_timelineClick;
+            lv_anim_timeline_t *anim_timelineVolume;
         } ui;
 
         void create(Operations &opts);
         void release(void);
         void appearAnimStart(bool reverse = false);
         void appearAnimClick(bool reverse = false);
+        void appearAnimVolume(bool reverse = false);
 
         void addMusicList(const char *name);
         void setPlayProgress(int cur, int total);
@@ -98,6 +104,7 @@ namespace Page
         void listContCreate(lv_obj_t *obj);
         void rollerContCreate(lv_obj_t *obj);
         void volumeSliderContCreate(lv_obj_t *obj);
+        void fontCreate(void);
 
         static void onEvent(lv_event_t *event);
         static void buttonEventHandler(lv_event_t *event);

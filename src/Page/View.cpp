@@ -8,11 +8,7 @@ void View::create(Operations &opts)
     _opts = opts;
 
     // 初始化字体
-    _font.name = "/mnt/UDISK/SmileySans.ttf";
-    _font.weight = 16;
-    _font.style = FT_FONT_STYLE_NORMAL;
-    _font.mem = nullptr;
-    lv_ft_font_init(&_font);
+    fontCreate();
 
     // 总画布的创建
     contCreate(lv_scr_act());
@@ -26,16 +22,22 @@ void View::create(Operations &opts)
     // 按钮画布的创建
     btnContCreate(ui.cont);
 
+    // 音量条画布的创建
+    volumeSliderContCreate(ui.cont);
+
     // 为当前屏幕添加事件回调函数
     AttachEvent(lv_scr_act());
     // 为播放/暂停键添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.btn, buttonEventHandler, LV_EVENT_ALL, this);
     // 为进度条添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
+    // 为进度条添加事件回调函数
+    lv_obj_add_event_cb(ui.sliderCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
 
     // 动画的创建
     ui.anim_timeline = lv_anim_timeline_create();
     ui.anim_timelineClick = lv_anim_timeline_create();
+    ui.anim_timelineVolume = lv_anim_timeline_create();
 
 #define ANIM_DEF(start_time, obj, attr, start, end) \
     {start_time, obj, LV_ANIM_EXEC(attr), start, end, 500, lv_anim_path_ease_out, true}
@@ -51,6 +53,15 @@ void View::create(Operations &opts)
             LV_ANIM_TIMELINE_WRAPPER_END // 这个标志着结构体成员结束，不能省略，在下面函数lv_anim_timeline_add_wrapper的轮询中做判断条件
         };
     lv_anim_timeline_add_wrapper(ui.anim_timeline, wrapper);
+
+    lv_anim_timeline_wrapper_t wrapperVolume[] =
+        {
+            ANIM_DEF(0, ui.sliderCont.cont, x, lv_obj_get_x_aligned(ui.sliderCont.cont), 100),
+            ANIM_DEF(0, ui.sliderCont.cont, y, lv_obj_get_y_aligned(ui.sliderCont.cont), -50),
+
+            LV_ANIM_TIMELINE_WRAPPER_END // 这个标志着结构体成员结束，不能省略，在下面函数lv_anim_timeline_add_wrapper的轮询中做判断条件
+        };
+    lv_anim_timeline_add_wrapper(ui.anim_timelineVolume, wrapperVolume);
 
     lv_coord_t xOriginal = lv_obj_get_x_aligned(lv_obj_get_child(ui.btnCont.cont, 1));
     lv_coord_t yOriginal = lv_obj_get_y_aligned(lv_obj_get_child(ui.btnCont.cont, 1));
@@ -99,6 +110,7 @@ void View::create(Operations &opts)
 
     // 开始动画
     appearAnimStart();
+    appearAnimVolume();
 }
 
 void View::release()
@@ -112,6 +124,11 @@ void View::release()
     {
         lv_anim_timeline_del(ui.anim_timelineClick);
         ui.anim_timelineClick = nullptr;
+    }
+    if (ui.anim_timelineVolume)
+    {
+        lv_anim_timeline_del(ui.anim_timelineVolume);
+        ui.anim_timelineVolume = nullptr;
     }
     // 移除屏幕手势回调函数
     lv_obj_remove_event_cb(lv_scr_act(), onEvent);
@@ -140,9 +157,31 @@ void View::appearAnimClick(bool reverse) // 按钮动画
     lv_anim_timeline_start(ui.anim_timelineClick);
 }
 
+void View::appearAnimVolume(bool reverse) // 音量条动画
+{
+    lv_anim_timeline_set_reverse(ui.anim_timelineVolume, reverse);
+    lv_anim_timeline_start(ui.anim_timelineVolume);
+}
+
 void View::AttachEvent(lv_obj_t *obj)
 {
     lv_obj_add_event_cb(obj, onEvent, LV_EVENT_ALL, this);
+}
+
+// 自定义字体初始化
+void View::fontCreate(void)
+{
+    ui.fontCont.font16.name = "/mnt/UDISK/SmileySans.ttf";
+    ui.fontCont.font16.weight = 16;
+    ui.fontCont.font16.style = FT_FONT_STYLE_NORMAL;
+    ui.fontCont.font16.mem = nullptr;
+    lv_ft_font_init(&ui.fontCont.font16);
+
+    ui.fontCont.font20.name = "/mnt/UDISK/SmileySans.ttf";
+    ui.fontCont.font20.weight = 20;
+    ui.fontCont.font20.style = FT_FONT_STYLE_NORMAL;
+    ui.fontCont.font20.mem = nullptr;
+    lv_ft_font_init(&ui.fontCont.font20);
 }
 
 // 总画布的创建
@@ -161,6 +200,7 @@ void View::contCreate(lv_obj_t *obj)
 
     lv_obj_t *label = lv_label_create(ui.cont);
     lv_obj_remove_style_all(label);
+    lv_obj_set_style_text_font(label, ui.fontCont.font20.font, 0);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
     lv_label_set_text_fmt(label, "%s", "songName");
     ui.name = label;
@@ -202,20 +242,33 @@ void View::btnContCreate(lv_obj_t *obj)
     ui.btnCont.timeLabel = label;
 }
 
+// 音量条画布的创建
 void View::volumeSliderContCreate(lv_obj_t *obj)
 {
     lv_obj_t *sliderCont = lv_obj_create(obj);
     lv_obj_remove_style_all(sliderCont);
-    lv_obj_set_size(sliderCont, lv_pct(90), LV_VER_RES / 4);
+    lv_obj_set_size(sliderCont, lv_pct(20), lv_pct(40));
     lv_obj_clear_flag(sliderCont, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_opa(sliderCont, LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_color(sliderCont, lv_color_hex(0x6a8d6d), 0);
-    lv_obj_align(sliderCont, LV_ALIGN_TOP_MID, 0, -42);
-    lv_obj_set_style_radius(sliderCont, 16, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(sliderCont, LV_OPA_80, 0);
+    lv_obj_set_style_bg_color(sliderCont, lv_color_hex(0xeeeeee), 0);
+    lv_obj_align(sliderCont, LV_ALIGN_TOP_RIGHT, -20, 40);
+    lv_obj_set_style_radius(sliderCont, 10, LV_PART_MAIN);
 
     ui.sliderCont.cont = sliderCont;
 
-    ui.sliderCont.slider = sliderCreate(sliderCont, nullptr, 0, 20);
+    ui.sliderCont.slider = sliderCreate(sliderCont, nullptr, 0, 0);
+    lv_obj_set_style_bg_opa(ui.sliderCont.slider, LV_OPA_TRANSP, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui.sliderCont.slider, LV_OPA_TRANSP, LV_PART_KNOB | LV_STATE_PRESSED);
+    lv_obj_set_style_border_width(ui.sliderCont.slider, 0, LV_PART_KNOB);
+    lv_obj_set_size(ui.sliderCont.slider, lv_pct(50), lv_pct(80));
+
+    int val = 30;
+    int max = 100;
+    if (_opts.getVolumeCb != nullptr) // 获取当前音量和最大值
+        _opts.getVolumeCb(&val, &max);
+
+    lv_slider_set_range(ui.sliderCont.slider, 0, max);
+    lv_slider_set_value(ui.sliderCont.slider, val, LV_ANIM_OFF);
 }
 
 void View::listContCreate(lv_obj_t *obj)
@@ -243,14 +296,15 @@ void View::rollerContCreate(lv_obj_t *obj)
     // 创建歌词滚筒
     lv_obj_t *roller = lv_roller_create(obj);
     lv_obj_set_size(roller, lv_pct(45), lv_pct(50));
+    lv_obj_set_style_radius(roller, 16, LV_PART_MAIN);
     lv_obj_align(roller, LV_ALIGN_RIGHT_MID, -20, 0);                          // 设置对齐
     lv_obj_clear_flag(roller, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE); // 不可滚动不可点击
     lv_obj_set_style_bg_color(roller, lv_color_hex(0x6a8d6d), 0);
-    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                        // 背景透明
-    lv_obj_set_style_border_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                    // 边框透明
-    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_PART_SELECTED | LV_STATE_DEFAULT);     // 选中项背景透明
-    lv_obj_set_style_text_font(roller, _font.font, LV_STATE_DEFAULT);                    // 非选中项字体
-    lv_obj_set_style_text_font(roller, _font.font, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项字体
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                                     // 背景透明
+    lv_obj_set_style_border_opa(roller, LV_OPA_60, LV_STATE_DEFAULT);                                 // 边框透明
+    lv_obj_set_style_bg_opa(roller, LV_OPA_60, LV_PART_SELECTED | LV_STATE_DEFAULT);                  // 选中项背景透明
+    lv_obj_set_style_text_font(roller, ui.fontCont.font16.font, LV_STATE_DEFAULT);                    // 非选中项字体
+    lv_obj_set_style_text_font(roller, ui.fontCont.font20.font, LV_PART_SELECTED | LV_STATE_DEFAULT); // 选中项字体
     lv_obj_set_style_text_color(roller, lv_color_hex(0xffffff), LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(roller, lv_color_hex(0xe9de9e), LV_PART_SELECTED | LV_STATE_DEFAULT); // 字体颜色
     lv_roller_set_options(roller, "begin~", LV_ROLLER_MODE_NORMAL);
@@ -327,8 +381,8 @@ const char *View::getMusicName(int index)
 }
 
 /**
- *@brief 在底部显示音乐名称
- *@param name 音乐名
+ * @brief 在底部显示音乐名称
+ * @param name 音乐名
  */
 void View::showMusicName(const char *name)
 {
@@ -357,7 +411,7 @@ lv_obj_t *View::sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_of
     lv_obj_set_style_bg_opa(obj, LV_OPA_60, LV_PART_KNOB | LV_STATE_PRESSED);
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x445588), LV_PART_KNOB);
 
-    lv_obj_set_style_radius(obj, 5, LV_PART_MAIN);
+    lv_obj_set_style_radius(obj, 8, LV_PART_MAIN);
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x3c9ba6), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN);
 
@@ -429,7 +483,7 @@ lv_obj_t *View::listCreate(const char *name, const void *img_src)
     lv_img_set_src(img, LV_SYMBOL_PLAY);
 
     lv_obj_t *label = lv_label_create(obj);
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(label, ui.fontCont.font20.font, 0);
     lv_label_set_text(label, name);
     lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_flex_grow(label, 1);
@@ -527,9 +581,19 @@ void View::sliderEventHandler(lv_event_t *event)
     }
     if (code == LV_EVENT_RELEASED)
     {
-        int cur = lv_slider_get_value(obj);
-        if (instance->_opts.setCurCb != nullptr)
-            instance->_opts.setCurCb(cur);
+        if (obj == instance->ui.btnCont.slider)
+        {
+            int cur = lv_slider_get_value(obj);
+            if (instance->_opts.setCurCb != nullptr)
+                instance->_opts.setCurCb(cur);
+        }
+
+        if (obj == instance->ui.sliderCont.slider)
+        {
+            int val = lv_slider_get_value(obj);
+            if (instance->_opts.setVolumeCb != nullptr)
+                instance->_opts.setVolumeCb(val);
+        }
     }
 }
 
@@ -571,10 +635,12 @@ void View::onEvent(lv_event_t *event)
         {
         case LV_DIR_LEFT:
             printf("[View] LV_DIR_LEFT!\n");
+            instance->appearAnimVolume(true);
 
             break;
         case LV_DIR_RIGHT:
             printf("[View] LV_DIR_RIGHT!\n");
+            instance->appearAnimVolume(false);
 
             break;
         case LV_DIR_TOP:
