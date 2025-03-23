@@ -70,6 +70,14 @@ namespace Page
             struct
             {
                 lv_obj_t *cont;
+                lv_obj_t *prevBtn; // 上一首
+                lv_obj_t *nextBtn; // 下一首
+                lv_obj_t *funcBtn; // Function Button
+            } funcCont;
+
+            struct
+            {
+                lv_obj_t *cont;
                 lv_obj_t *slider; // 音量条
             } sliderCont;
 
@@ -104,6 +112,7 @@ namespace Page
         void listContCreate(lv_obj_t *obj);
         void rollerContCreate(lv_obj_t *obj);
         void volumeSliderContCreate(lv_obj_t *obj);
+        void funcContCreate(lv_obj_t *obj);
         void fontCreate(void);
 
         static void onEvent(lv_event_t *event);
@@ -112,7 +121,7 @@ namespace Page
         static void sliderEventHandler(lv_event_t *event);
 
         lv_obj_t *roundRectCreate(lv_obj_t *par, lv_coord_t x_ofs, lv_coord_t y_ofs);
-        lv_obj_t *btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs);
+        lv_obj_t *btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs, lv_coord_t w = 50, lv_coord_t h = 50);
         lv_obj_t *sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs = 0, lv_coord_t y_ofs = 0, int32_t min = 0, int32_t max = 255, int32_t val = 0);
         lv_obj_t *listCreate(const char *name, const void *img_src);
     };

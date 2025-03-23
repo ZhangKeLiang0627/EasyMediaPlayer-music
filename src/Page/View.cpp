@@ -19,6 +19,9 @@ void View::create(Operations &opts)
     // 创建歌词滚筒
     rollerContCreate(ui.cont);
 
+    // 功能按钮画布的创建
+    funcContCreate(ui.cont);
+
     // 按钮画布的创建
     btnContCreate(ui.cont);
 
@@ -49,7 +52,7 @@ void View::create(Operations &opts)
         {
             ANIM_DEF(0, ui.btnCont.cont, height, 20, lv_obj_get_height(ui.btnCont.cont)),
             ANIM_DEF(0, ui.btnCont.cont, width, 20, lv_obj_get_width(ui.btnCont.cont)),
-
+            ANIM_DEF(100, ui.funcCont.cont, y, 480, lv_obj_get_y_aligned(ui.funcCont.cont)),
             LV_ANIM_TIMELINE_WRAPPER_END // 这个标志着结构体成员结束，不能省略，在下面函数lv_anim_timeline_add_wrapper的轮询中做判断条件
         };
     lv_anim_timeline_add_wrapper(ui.anim_timeline, wrapper);
@@ -215,7 +218,7 @@ void View::btnContCreate(lv_obj_t *obj)
     lv_obj_clear_flag(btnCont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(btnCont, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(btnCont, lv_color_hex(0x6a8d6d), 0);
-    lv_obj_align(btnCont, LV_ALIGN_BOTTOM_MID, 0, 42);
+    lv_obj_align(btnCont, LV_ALIGN_BOTTOM_MID, 0, 50);
     lv_obj_set_style_radius(btnCont, 16, LV_PART_MAIN);
     ui.btnCont.cont = btnCont;
 
@@ -237,9 +240,40 @@ void View::btnContCreate(lv_obj_t *obj)
 
     lv_obj_t *label = lv_label_create(btnCont);
     lv_obj_remove_style_all(label);
-    lv_obj_align(label, LV_ALIGN_TOP_MID, -100, 0);
+    lv_obj_set_style_text_font(label, ui.fontCont.font16.font, LV_STATE_DEFAULT);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, -100, 5);
     lv_label_set_text_fmt(label, "%s", "0:0/0:0");
     ui.btnCont.timeLabel = label;
+}
+
+// 功能按键画布的创建
+void View::funcContCreate(lv_obj_t *obj)
+{
+    lv_obj_t *cont = lv_obj_create(obj);
+    lv_obj_remove_style_all(cont);
+    lv_obj_set_size(cont, lv_pct(26), lv_pct(10));
+    lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(cont, lv_color_hex(0xff9b5e), 0);
+    lv_obj_align(cont, LV_ALIGN_BOTTOM_LEFT, 40, -60);
+    lv_obj_set_style_radius(cont, 16, LV_PART_MAIN);
+
+    lv_obj_set_style_shadow_width(cont, 10, 0);
+    lv_obj_set_style_shadow_ofs_x(cont, 4, 0);
+    lv_obj_set_style_shadow_ofs_y(cont, 2, 0);
+    lv_obj_set_style_shadow_color(cont, lv_color_hex(0xe36f47), 0);
+
+    ui.funcCont.cont = cont;
+
+    lv_obj_t *btn = nullptr;
+    btn = btnCreate(cont, LV_SYMBOL_PREV, 6, -4, 30, 30);
+    ui.funcCont.prevBtn = btn;
+
+    btn = btnCreate(cont, LV_SYMBOL_NEXT, 47, -4, 30, 30);
+    ui.funcCont.nextBtn = btn;
+
+    btn = btnCreate(cont, LV_SYMBOL_LOOP, 88, -4, 30, 30);
+    ui.funcCont.funcBtn = btn;
 }
 
 // 音量条画布的创建
@@ -433,19 +467,19 @@ lv_obj_t *View::sliderCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_of
     return obj;
 }
 
-lv_obj_t *View::btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs)
+lv_obj_t *View::btnCreate(lv_obj_t *par, const void *img_src, lv_coord_t x_ofs, lv_coord_t y_ofs, lv_coord_t w, lv_coord_t h)
 {
     lv_obj_t *obj = lv_obj_create(par);
     lv_obj_remove_style_all(obj);
-    lv_obj_set_size(obj, 50, 50);
+    lv_obj_set_size(obj, w, h);
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_align(obj, LV_ALIGN_LEFT_MID, x_ofs, y_ofs);
     lv_obj_set_style_bg_img_src(obj, img_src, 0);
 
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-    lv_obj_set_style_width(obj, 30, LV_STATE_PRESSED);                         // 设置button按下时的宽
-    lv_obj_set_style_height(obj, 30, LV_STATE_PRESSED);                        // 设置button按下时的长
+    lv_obj_set_style_width(obj, w / 1.5f, LV_STATE_PRESSED);                   // 设置button按下时的宽
+    lv_obj_set_style_height(obj, h / 1.5f, LV_STATE_PRESSED);                  // 设置button按下时的长
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x356b8c), 0);                 // 设置按钮默认的颜色
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x242947), LV_STATE_PRESSED);  // 设置按钮在被按下时的颜色
     lv_obj_set_style_bg_color(obj, lv_color_hex(0xf2daaa), LV_STATE_FOCUSED);  // 设置按钮在被聚焦时的颜色
