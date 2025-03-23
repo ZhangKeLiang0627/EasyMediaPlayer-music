@@ -43,32 +43,30 @@ namespace Page
     class View
     {
     private:
-        // View回调函数集
-        Operations _opts;
-        // 保存当前播放的音乐列表btn
-        lv_obj_t *_playingMusicBtn = nullptr;
-        lv_ft_info_t _font;
+        Operations _opts;                     // View回调函数集
+        lv_obj_t *_playingMusicBtn = nullptr; // 保存当前播放的音乐列表btn
+        lv_ft_info_t _font;                   // 自定义字体
+        bool _isPlaying = false;              // 是否音乐播放标志位
 
     public:
         struct
         {
-            // 歌词滚轮
-            lv_obj_t *lyricRoller;
+            lv_obj_t *lyricRoller; // 歌词滚轮
 
             lv_obj_t *cont;
             lv_obj_t *name;
             struct
             {
                 lv_obj_t *cont;
-                lv_obj_t *btn;
-                lv_obj_t *slider;
-                lv_obj_t *timeLabel;
+                lv_obj_t *btn;       // 播放键 / 暂停键
+                lv_obj_t *slider;    // 进度条
+                lv_obj_t *timeLabel; // 时间戳
             } btnCont;
 
             struct
             {
                 lv_obj_t *cont;
-                lv_obj_t *slider;
+                lv_obj_t *slider; // 音量条
             } sliderCont;
 
             struct
@@ -97,9 +95,9 @@ namespace Page
 
         void contCreate(lv_obj_t *obj);
         void btnContCreate(lv_obj_t *obj);
-        void sliderContCreate(lv_obj_t *obj);
         void listContCreate(lv_obj_t *obj);
         void rollerContCreate(lv_obj_t *obj);
+        void volumeSliderContCreate(lv_obj_t *obj);
 
         static void onEvent(lv_event_t *event);
         static void buttonEventHandler(lv_event_t *event);

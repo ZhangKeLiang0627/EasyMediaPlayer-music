@@ -28,7 +28,8 @@ void View::create(Operations &opts)
 
     // 为当前屏幕添加事件回调函数
     AttachEvent(lv_scr_act());
-
+    // 为播放/暂停键添加事件回调函数
+    lv_obj_add_event_cb(ui.btnCont.btn, buttonEventHandler, LV_EVENT_ALL, this);
     // 为进度条添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
 
@@ -153,7 +154,7 @@ void View::contCreate(lv_obj_t *obj)
     lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
     lv_obj_set_style_bg_color(cont, lv_color_hex(0xcccccc), 0);
-    lv_obj_set_style_bg_img_src(cont, "S:./res/icon/main1.bin", 0);
+    // lv_obj_set_style_bg_img_src(cont, "S:./res/icon/main1.bin", 0);
     lv_obj_set_style_bg_img_opa(cont, LV_OPA_COVER, 0);
     lv_obj_align(cont, LV_ALIGN_CENTER, 0, 0);
     ui.cont = cont;
@@ -179,7 +180,6 @@ void View::btnContCreate(lv_obj_t *obj)
     ui.btnCont.cont = btnCont;
 
     lv_obj_t *btn = btnCreate(btnCont, LV_SYMBOL_PLAY, 10, -20);
-    lv_obj_add_event_cb(btn, buttonEventHandler, LV_EVENT_ALL, this);
     ui.btnCont.btn = btn;
 
     /* Render octagon explode */
@@ -202,7 +202,7 @@ void View::btnContCreate(lv_obj_t *obj)
     ui.btnCont.timeLabel = label;
 }
 
-void View::sliderContCreate(lv_obj_t *obj)
+void View::volumeSliderContCreate(lv_obj_t *obj)
 {
     lv_obj_t *sliderCont = lv_obj_create(obj);
     lv_obj_remove_style_all(sliderCont);
@@ -486,6 +486,30 @@ void View::buttonEventHandler(lv_event_t *event)
     if (code == LV_EVENT_SHORT_CLICKED)
     {
         instance->appearAnimClick();
+
+        if (instance->_isPlaying == true)
+        {
+            if (instance->_opts.pauseCb != nullptr)
+            {
+                instance->_isPlaying = false;
+                instance->_opts.pauseCb();
+                lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PLAY, 0);
+                printf("[View] pause!\n");
+            }
+        }
+        else
+        {
+            if (instance->_opts.playCb != nullptr)
+            {
+
+                int index = lv_obj_get_index(instance->_playingMusicBtn);
+
+                instance->_isPlaying = true;
+                instance->_opts.playCb(nullptr, index);
+                lv_obj_set_style_bg_img_src(obj, LV_SYMBOL_PAUSE, 0);
+                printf("[View] play!\n");
+            }
+        }
     }
 }
 
@@ -522,6 +546,7 @@ void View::listBtnEventHandler(lv_event_t *event)
 
     if (code == LV_EVENT_SHORT_CLICKED)
     {
+        instance->_isPlaying = true;
         instance->_playingMusicBtn = obj;
         int index = lv_obj_get_index(obj);
 
@@ -558,6 +583,7 @@ void View::onEvent(lv_event_t *event)
             break;
         case LV_DIR_BOTTOM:
             printf("[View] LV_DIR_BOTTOM!\n");
+            instance->_opts.exitCb();
             break;
 
         default:
