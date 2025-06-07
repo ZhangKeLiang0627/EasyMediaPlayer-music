@@ -177,13 +177,13 @@ void View::AttachEvent(lv_obj_t *obj)
 // 自定义字体初始化
 void View::fontCreate(void)
 {
-    ui.fontCont.font16.name = "/mnt/UDISK/SmileySans.ttf";
+    ui.fontCont.font16.name = "/mnt/UDISK/font/SmileySans.ttf";
     ui.fontCont.font16.weight = 16;
     ui.fontCont.font16.style = FT_FONT_STYLE_NORMAL;
     ui.fontCont.font16.mem = nullptr;
     lv_ft_font_init(&ui.fontCont.font16);
 
-    ui.fontCont.font20.name = "/mnt/UDISK/SmileySans.ttf";
+    ui.fontCont.font20.name = "/mnt/UDISK/font/SmileySans.ttf";
     ui.fontCont.font20.weight = 20;
     ui.fontCont.font20.style = FT_FONT_STYLE_NORMAL;
     ui.fontCont.font20.mem = nullptr;
