@@ -1,7 +1,7 @@
 #include "Model.h"
 
 #define MUSIC_DIR "/mnt/UDISK/music/"
-#define LYRIC_DIR "/mnt/UDISK/music/lyrics"
+#define LYRIC_DIR "/mnt/UDISK/music/lyrics/"
 
 using namespace Page;
 

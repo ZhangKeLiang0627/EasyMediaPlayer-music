@@ -37,7 +37,7 @@ void View::create(Operations &opts)
     lv_obj_add_event_cb(ui.funcCont.funcBtn, buttonEventHandler, LV_EVENT_ALL, this);
     // 为进度条添加事件回调函数
     lv_obj_add_event_cb(ui.btnCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
-    // 为进度条添加事件回调函数
+    // 为音量条添加事件回调函数
     lv_obj_add_event_cb(ui.sliderCont.slider, sliderEventHandler, LV_EVENT_ALL, this);
 
     // 动画的创建
@@ -555,7 +555,7 @@ lv_obj_t *View::roundRectCreate(lv_obj_t *par, lv_coord_t x_ofs, lv_coord_t y_of
 }
 
 /**
- * @brief 设置视频播放进度显示
+ * @brief 设置音乐播放进度显示
  */
 void View::setPlayProgress(int cur, int total)
 {
