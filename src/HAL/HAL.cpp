@@ -1,4 +1,4 @@
-#include "hal.h"
+#include "HAL.h"
 #include "sound.h"
 
 /* File system funtion */

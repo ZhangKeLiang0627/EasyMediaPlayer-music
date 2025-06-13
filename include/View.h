@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../libs/lvgl/lvgl.h"
-#include "lv_obj_ext_func.h"
-#include "lv_anim_timeline_wrapper.h"
+#include "../utils/lv_ext/lv_obj_ext_func.h"
+#include "../utils/lv_ext/lv_anim_timeline_wrapper.h"
 #include <functional>
 
 namespace Page
@@ -43,10 +43,10 @@ namespace Page
     class View
     {
     private:
-        Operations _opts;                         // View回调函数集
-        lv_obj_t *_playingMusicBtn = nullptr;     // 保存当前播放的音乐列表btn
-        bool _isPlaying = false;                  // 是否音乐播放标志位
-        PlayMode _playMode = PlayMode_ListLoop;   // 列表播放模式
+        Operations _opts;                       // View回调函数集
+        lv_obj_t *_playingMusicBtn = nullptr;   // 保存当前播放的音乐列表btn
+        bool _isPlaying = false;                // 是否音乐播放标志位
+        PlayMode _playMode = PlayMode_ListLoop; // 列表播放模式
 
     public:
         struct
